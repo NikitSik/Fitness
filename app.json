@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Walk to Unlock",
+    "slug": "walk-to-unlock",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a5bdc"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.walkto.unlock",
+      "infoPlist": {
+        "NSHealthUpdateUsageDescription": "Мы используем HealthKit для отслеживания шагов и начисления экранного времени.",
+        "NSHealthShareUsageDescription": "Мы используем HealthKit для отслеживания шагов и начисления экранного времени.",
+        "NSUserTrackingUsageDescription": "Ваши шаги используются для расчета экранного времени.",
+        "com.apple.developer.healthkit": true
+      }
+    },
+    "android": {
+      "package": "com.walkto.unlock",
+      "permissions": [
+        "com.google.android.gms.permission.ACTIVITY_RECOGNITION",
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.POST_NOTIFICATIONS"
+      ],
+      "googleServicesFile": "./google-services.json"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      ["react-native-iap"],
+      ["expo-build-properties", {"ios": {"useFrameworks": "static"}}]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "00000000-0000-0000-0000-000000000000"
+      }
+    }
+  }
+}
