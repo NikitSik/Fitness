@@ -2,13 +2,13 @@ import React from 'react';
 import { Pressable } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import StepsScreen from '../screens/StepsScreen';
 import StoreScreen from '../screens/StoreScreen';
 import AchievementsScreen from '../screens/AchievementsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import { useNavigation } from '@react-navigation/native';
+import { HomeIcon, StepsIcon, StoreIcon, TrophyIcon, SettingsIcon } from '../components/icons/SimpleIcons';
 
 export type RootStackParamList = {
   Tabs: undefined;
@@ -40,7 +40,7 @@ const TabNavigator = () => {
         tabBarInactiveTintColor: '#a8c0ff',
         headerRight: () => (
           <Pressable onPress={() => navigation.navigate('Settings' as never)}>
-            <Ionicons name="settings-outline" size={22} color="#ffffff" />
+            <SettingsIcon color="#ffffff" size={22} />
           </Pressable>
         )
       }}
@@ -50,9 +50,7 @@ const TabNavigator = () => {
         component={HomeScreen}
         options={{
           title: 'Домой',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
-          )
+          tabBarIcon: ({ color, size }) => <HomeIcon color={color} size={size} />
         }}
       />
       <Tab.Screen
@@ -60,9 +58,7 @@ const TabNavigator = () => {
         component={StepsScreen}
         options={{
           title: 'Шаги',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="walk-outline" size={size} color={color} />
-          )
+          tabBarIcon: ({ color, size }) => <StepsIcon color={color} size={size} />
         }}
       />
       <Tab.Screen
@@ -70,9 +66,7 @@ const TabNavigator = () => {
         component={StoreScreen}
         options={{
           title: 'Магазин',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="cart-outline" size={size} color={color} />
-          )
+          tabBarIcon: ({ color, size }) => <StoreIcon color={color} size={size} />
         }}
       />
       <Tab.Screen
@@ -80,9 +74,7 @@ const TabNavigator = () => {
         component={AchievementsScreen}
         options={{
           title: 'Ачивки',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="trophy-outline" size={size} color={color} />
-          )
+          tabBarIcon: ({ color, size }) => <TrophyIcon color={color} size={size} />
         }}
       />
     </Tab.Navigator>
