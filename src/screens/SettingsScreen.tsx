@@ -13,8 +13,12 @@ const SettingsScreen: React.FC = () => {
 
   return (
     <ScreenContainer>
-      <RoundedCard>
-        <SectionHeading title="Блокировка приложений" subtitle="Выберите, что ограничивать" />
+      <RoundedCard background="#ffffff">
+        <SectionHeading
+          variant="dark"
+          title="Блокировка приложений"
+          subtitle="Выберите, что ограничивать"
+        />
         {availableApps.map((app) => (
           <View key={app} style={styles.row}>
             <Text style={styles.appTitle}>{readableAppName[app]}</Text>
@@ -23,8 +27,12 @@ const SettingsScreen: React.FC = () => {
         ))}
       </RoundedCard>
 
-      <RoundedCard>
-        <SectionHeading title="Уведомления" subtitle="Напоминания о конце лимита" />
+      <RoundedCard background="#ffffff">
+        <SectionHeading
+          variant="dark"
+          title="Уведомления"
+          subtitle="Напоминания о конце лимита"
+        />
         <View style={styles.row}>
           <Text style={styles.appTitle}>Напомнить за 5 минут</Text>
           <Switch value={notificationsEnabled} onValueChange={setNotificationsEnabled} />
@@ -45,12 +53,12 @@ const styles = StyleSheet.create({
     marginBottom: 16
   },
   appTitle: {
-    color: '#ffffff',
+    color: '#112d60',
     fontSize: 16,
     fontWeight: '600'
   },
   description: {
-    color: '#d8e6ff',
+    color: '#5a6d9c',
     fontSize: 13,
     marginTop: 4
   }

@@ -13,8 +13,8 @@ const StepsScreen: React.FC = () => {
 
   return (
     <ScreenContainer>
-      <RoundedCard>
-        <SectionHeading title="Сегодня" subtitle="Статистика активности" />
+      <RoundedCard background="#ffffff">
+        <SectionHeading variant="dark" title="Сегодня" subtitle="Статистика активности" />
         <View style={styles.metricsRow}>
           <MetricTile label="Шаги" value={daily.steps.toLocaleString('ru-RU')} hint="синхронизировано" />
           <View style={styles.metricSpacer} />
@@ -35,9 +35,9 @@ const StepsScreen: React.FC = () => {
         </View>
       </RoundedCard>
 
-      <RoundedCard>
-        <SectionHeading title="Неделя" subtitle="Прогресс за последние 7 дней" />
-        <WeeklyTrend data={weekly} />
+      <RoundedCard background="#ffffff">
+        <SectionHeading variant="dark" title="Неделя" subtitle="Прогресс за последние 7 дней" />
+        <WeeklyTrend data={weekly} variant="dark" />
         <View style={styles.weekSummaryRow}>
           <Text style={styles.weekSummaryLabel}>Среднее</Text>
           <Text style={styles.weekSummaryValue}>{Math.round(averageSteps).toLocaleString('ru-RU')} шагов</Text>
@@ -63,16 +63,17 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   weekSummaryLabel: {
-    color: '#d8e6ff',
-    fontSize: 14
+    color: '#5a6d9c',
+    fontSize: 14,
+    fontWeight: '600'
   },
   weekSummaryValue: {
-    color: '#ffffff',
+    color: '#112d60',
     fontSize: 18,
     fontWeight: '700'
   },
   weekHint: {
-    color: '#e6f1ff',
+    color: '#7d8db5',
     fontSize: 13,
     marginTop: 6
   }

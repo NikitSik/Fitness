@@ -11,8 +11,8 @@ interface Props {
 
 const ProgressBar: React.FC<Props> = ({
   progress,
-  trackColor = 'rgba(255,255,255,0.2)',
-  fillColor = '#ffffff',
+  trackColor = '#dce6ff',
+  fillColor = '#1b63ff',
   height = 12,
   style
 }) => (

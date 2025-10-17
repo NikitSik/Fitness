@@ -6,13 +6,24 @@ interface Props {
   value: string;
   hint?: string;
   accent?: string;
+  labelColor?: string;
+  valueColor?: string;
+  hintColor?: string;
 }
 
-const MetricTile: React.FC<Props> = ({ label, value, hint, accent = 'rgba(255,255,255,0.16)' }) => (
-  <View style={[styles.container, { backgroundColor: accent }]}> 
-    <Text style={styles.label}>{label}</Text>
-    <Text style={styles.value}>{value}</Text>
-    {hint ? <Text style={styles.hint}>{hint}</Text> : null}
+const MetricTile: React.FC<Props> = ({
+  label,
+  value,
+  hint,
+  accent = '#f4f7ff',
+  labelColor = '#5a6d9c',
+  valueColor = '#0a2a6b',
+  hintColor = '#7d8db5'
+}) => (
+  <View style={[styles.container, { backgroundColor: accent }]}>
+    <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
+    <Text style={[styles.value, { color: valueColor }]}>{value}</Text>
+    {hint ? <Text style={[styles.hint, { color: hintColor }]}>{hint}</Text> : null}
   </View>
 );
 
@@ -23,17 +34,15 @@ const styles = StyleSheet.create({
     borderRadius: 20
   },
   label: {
-    color: '#d8e6ff',
     fontSize: 13,
-    marginBottom: 8
+    marginBottom: 8,
+    fontWeight: '600'
   },
   value: {
-    color: '#ffffff',
     fontSize: 24,
     fontWeight: '700'
   },
   hint: {
-    color: '#e8f1ff',
     fontSize: 12,
     marginTop: 6
   }

@@ -12,7 +12,7 @@ const StoreScreen: React.FC = () => {
     return (
       <ScreenContainer scrollable={false}>
         <View style={styles.loaderWrapper}>
-          <ActivityIndicator color="#ffffff" />
+          <ActivityIndicator color="#1b63ff" />
           <Text style={styles.loaderText}>Загрузка предложений...</Text>
         </View>
       </ScreenContainer>
@@ -28,22 +28,31 @@ const StoreScreen: React.FC = () => {
 
   return (
     <ScreenContainer>
-      <RoundedCard>
-        <SectionHeading title="Текущий тариф" subtitle="Настройте скорость начисления минут" />
+      <RoundedCard background="#ffffff">
+        <SectionHeading
+          variant="dark"
+          title="Текущий тариф"
+          subtitle="Настройте скорость начисления минут"
+        />
         <Text style={styles.activeTitle}>{activeTier ? activeTier.title : 'Бесплатный тариф'}</Text>
         <Text style={styles.activeDescription}>
-          {activeTier ? activeTier.description : '100 метров = 10 минут. Улучшите тариф, чтобы получать больше.'}
+          {activeTier
+            ? activeTier.description
+            : '100 метров = 10 минут. Улучшите тариф, чтобы получать больше.'}
         </Text>
         <Pressable style={styles.restoreButton} onPress={() => void restore()}>
           <Text style={styles.restoreText}>Восстановить покупки</Text>
         </Pressable>
       </RoundedCard>
 
-      <SectionHeading title="Подписки" subtitle="Выберите оптимальный план" />
+      <SectionHeading variant="dark" title="Подписки" subtitle="Выберите оптимальный план" />
       {basePlans.map((tier) => {
         const isActive = activeTier?.productId === tier.productId;
         return (
-          <RoundedCard key={tier.productId} background={isActive ? 'rgba(62,213,152,0.35)' : 'rgba(255,255,255,0.18)'}>
+          <RoundedCard
+            key={tier.productId}
+            background={isActive ? '#e6fbf0' : '#f4f7ff'}
+          >
             <View style={styles.tierHeader}>
               <Text style={styles.tierTitle}>{tier.title}</Text>
               <Text style={styles.tierPrice}>{tier.price}</Text>
@@ -54,15 +63,17 @@ const StoreScreen: React.FC = () => {
               onPress={() => handleTierPress(tier.productId)}
               style={[styles.tierButton, isActive && styles.tierButtonActive]}
             >
-              <Text style={styles.tierButtonText}>{isActive ? 'Активен' : 'Выбрать'}</Text>
+              <Text style={[styles.tierButtonText, isActive && styles.tierButtonTextActive]}>
+                {isActive ? 'Активен' : 'Выбрать'}
+              </Text>
             </Pressable>
           </RoundedCard>
         );
       })}
 
-      <SectionHeading title="Бусты" subtitle="Временные усиления" />
+      <SectionHeading variant="dark" title="Бусты" subtitle="Временные усиления" />
       {extras.map((tier) => (
-        <RoundedCard key={tier.productId} background="rgba(255,255,255,0.22)">
+        <RoundedCard key={tier.productId} background="#f4f7ff">
           <View style={styles.tierHeader}>
             <Text style={styles.tierTitle}>{tier.title}</Text>
             <Text style={styles.tierPrice}>{tier.price}</Text>
@@ -84,17 +95,17 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   loaderText: {
-    color: '#ffffff',
+    color: '#112d60',
     marginTop: 12
   },
   activeTitle: {
-    color: '#ffffff',
+    color: '#112d60',
     fontSize: 20,
     fontWeight: '700',
     marginBottom: 6
   },
   activeDescription: {
-    color: '#d8e6ff',
+    color: '#5a6d9c',
     fontSize: 14,
     marginBottom: 16
   },
@@ -103,10 +114,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.16)'
+    backgroundColor: '#f1f5ff'
   },
   restoreText: {
-    color: '#ffffff',
+    color: '#1b63ff',
     fontWeight: '600'
   },
   tierHeader: {
@@ -116,26 +127,26 @@ const styles = StyleSheet.create({
     marginBottom: 12
   },
   tierTitle: {
-    color: '#ffffff',
+    color: '#112d60',
     fontSize: 18,
     fontWeight: '700'
   },
   tierPrice: {
-    color: '#ffffff',
+    color: '#1b63ff',
     fontSize: 16,
     fontWeight: '600'
   },
   tierDescription: {
-    color: '#e6f1ff',
+    color: '#5a6d9c',
     marginBottom: 12
   },
   tierRate: {
-    color: '#d8e6ff',
+    color: '#7d8db5',
     fontSize: 13,
     marginBottom: 16
   },
   tierButton: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1b63ff',
     paddingVertical: 12,
     borderRadius: 18,
     alignItems: 'center'
@@ -144,8 +155,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#3ed598'
   },
   tierButtonText: {
-    color: '#0a4bdc',
+    color: '#ffffff',
     fontWeight: '700'
+  },
+  tierButtonTextActive: {
+    color: '#08463b'
   },
   tierButtonSecondary: {
     marginTop: 16,
@@ -153,10 +167,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.6)'
+    borderColor: '#c8d6ff'
   },
   tierButtonSecondaryText: {
-    color: '#ffffff',
+    color: '#1b63ff',
     fontWeight: '700'
   }
 });

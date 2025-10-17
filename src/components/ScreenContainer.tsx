@@ -11,7 +11,7 @@ interface Props {
 const ScreenContainer: React.FC<Props> = ({ children, scrollable = true, contentContainerStyle }) => {
   if (scrollable) {
     return (
-      <LinearGradient colors={['#0a4bdc', '#1484f6']} style={styles.gradient}>
+      <LinearGradient colors={['#eef3ff', '#ffffff']} style={styles.gradient}>
         <ScrollView
           contentContainerStyle={[styles.scrollContent, contentContainerStyle]}
           showsVerticalScrollIndicator={false}
@@ -23,7 +23,7 @@ const ScreenContainer: React.FC<Props> = ({ children, scrollable = true, content
   }
 
   return (
-    <LinearGradient colors={['#0a4bdc', '#1484f6']} style={styles.gradient}>
+    <LinearGradient colors={['#eef3ff', '#ffffff']} style={styles.gradient}>
       <View style={[styles.scrollContent, contentContainerStyle]}>{children}</View>
     </LinearGradient>
   );

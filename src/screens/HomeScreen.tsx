@@ -2,13 +2,14 @@ import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import ScreenContainer from '../components/ScreenContainer';
 import RoundedCard from '../components/RoundedCard';
-import ProgressBar from '../components/ProgressBar';
 import SectionHeading from '../components/SectionHeading';
 import MetricTile from '../components/MetricTile';
 import { useActivity } from '../context/ActivityContext';
 import { useSettings } from '../context/SettingsContext';
 import { useSubscription } from '../context/SubscriptionContext';
 import { enforceBlocking } from '../services/app-limiter';
+import CircularProgress from '../components/CircularProgress';
+import ProgressBar from '../components/ProgressBar';
 
 const HomeScreen: React.FC = () => {
   const { daily, walking, startWalk, stopWalk, weekly, streakDays } = useActivity();
@@ -32,55 +33,73 @@ const HomeScreen: React.FC = () => {
 
   return (
     <ScreenContainer>
-      <Text style={styles.caption}>Оставшееся экранное время</Text>
-      <Text style={styles.minutesValue}>{Math.round(daily.remainingMinutes)} мин</Text>
-
-      <RoundedCard>
-        <SectionHeading
-          title="Прогресс прогулки"
-          subtitle={`Цель ${daily.goalMeters} м • Стрик ${streakDays} дн.`}
-        />
-        <View style={styles.progressRow}>
-          <View style={styles.progressValues}>
-            <Text style={styles.progressMain}>{Math.round(daily.meters)} м</Text>
-            <Text style={styles.progressHint}>из {daily.goalMeters} м</Text>
+      <RoundedCard gradientColors={[ '#1b63ff', '#4f9dff' ]} style={styles.heroCard}>
+        <View style={styles.heroHeader}>
+          <View>
+            <Text style={styles.heroCaption}>Экранное время</Text>
+            <Text style={styles.heroMinutes}>{Math.round(daily.remainingMinutes)} мин</Text>
           </View>
-          <Text style={styles.progressSteps}>{todaySteps} шагов</Text>
+          <View style={styles.heroBadge}>
+            <Text style={styles.heroBadgeText}>Стрик {streakDays} дн.</Text>
+          </View>
         </View>
-        <ProgressBar progress={progress} height={16} />
-        <Text style={styles.progressInfo}>
-          {daily.earnedMinutes.toFixed(0)} минут начислено · множитель х{daily.multiplier}
-        </Text>
+        <View style={styles.heroContent}>
+          <CircularProgress
+            progress={progress}
+            value={`${Math.round(daily.meters)} м`}
+            caption={`из ${daily.goalMeters} м`}
+          />
+          <View style={styles.heroDetails}>
+            <Text style={styles.heroDetailsLabel}>Сегодня</Text>
+            <Text style={styles.heroDetailsValue}>{todaySteps.toLocaleString('ru-RU')} шагов</Text>
+            <Text style={styles.heroDetailsHint}>
+              {daily.earnedMinutes.toFixed(0)} минут · множитель х{daily.multiplier}
+            </Text>
+            <Pressable
+              onPress={handleWalkPress}
+              style={[styles.walkButton, walking && styles.walkButtonActive]}
+            >
+              <Text style={[styles.walkButtonText, walking && styles.walkButtonTextActive]}>
+                {walking ? 'Остановить' : 'Go for a walk'}
+              </Text>
+              <Text style={[styles.walkButtonHint, walking && styles.walkButtonHintActive]}>
+                {walking ? 'Шаги синхронизируются...' : 'Apple HealthKit / Google Fit'}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
       </RoundedCard>
 
-      <View style={styles.metricsRow}>
-        <MetricTile
-          label="Шаги"
-          value={todaySteps.toLocaleString('ru-RU')}
-          hint="за сегодня"
-          accent="rgba(255,255,255,0.14)"
+      <RoundedCard background="#ffffff">
+        <SectionHeading
+          variant="dark"
+          title="Статистика"
+          subtitle={activeTier ? `Тариф: ${activeTier.title}` : 'Бесплатный тариф'}
         />
-        <View style={styles.metricSpacer} />
-        <MetricTile
-          label="Заработано"
-          value={`${Math.round(daily.earnedMinutes)} мин`}
-          hint={activeTier ? `Тариф: ${activeTier.title}` : 'Базовый тариф'}
-          accent="rgba(255,255,255,0.14)"
+        <View style={styles.metricsRow}>
+          <MetricTile
+            label="Сегодня"
+            value={`${Math.round(daily.earnedMinutes)} мин`}
+            hint="Начислено за прогулки"
+          />
+          <View style={styles.metricSpacer} />
+          <MetricTile
+            label="Осталось"
+            value={`${Math.round(daily.remainingMinutes)} мин`}
+            hint={`${Math.max(0, Math.round(daily.goalMeters - daily.meters))} м до цели`}
+          />
+        </View>
+        <ProgressBar
+          progress={progress}
+          height={12}
+          trackColor="#e5ecff"
+          fillColor="#1b63ff"
+          style={styles.progressBar}
         />
-      </View>
+      </RoundedCard>
 
-      <Pressable
-        onPress={handleWalkPress}
-        style={[styles.walkButton, walking && styles.walkButtonActive]}
-      >
-        <Text style={styles.walkButtonText}>{walking ? 'Остановить прогулку' : 'Go for a walk'}</Text>
-        <Text style={styles.walkButtonHint}>
-          {walking ? 'Шаги синхронизируются...' : 'Apple HealthKit / Google Fit'}
-        </Text>
-      </Pressable>
-
-      <RoundedCard background="rgba(255,255,255,0.22)">
-        <SectionHeading title="Акция дня" subtitle={daily.challenge} />
+      <RoundedCard background="#ffffff">
+        <SectionHeading variant="dark" title="Акция дня" subtitle={daily.challenge} />
         <Text style={styles.bonusText}>{daily.reward}</Text>
         <Text style={styles.bonusHint}>Сегодня минуты за шаги удваиваются после 3 000 шагов</Text>
       </RoundedCard>
@@ -89,89 +108,114 @@ const HomeScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  caption: {
-    color: '#d8e6ff',
-    fontSize: 16
+  heroCard: {
+    paddingBottom: 28
   },
-  minutesValue: {
-    color: '#ffffff',
-    fontSize: 52,
-    fontWeight: '800',
-    marginBottom: 24
-  },
-  progressRow: {
+  heroHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
     justifyContent: 'space-between',
-    marginBottom: 16
+    alignItems: 'center',
+    marginBottom: 20
   },
-  progressValues: {
-    flexDirection: 'row',
-    alignItems: 'flex-end'
-  },
-  progressMain: {
-    color: '#ffffff',
-    fontSize: 38,
-    fontWeight: '700',
-    marginRight: 12
-  },
-  progressHint: {
-    color: '#e6f1ff',
-    fontSize: 16
-  },
-  progressSteps: {
-    color: '#e6f1ff',
+  heroCaption: {
+    color: 'rgba(255,255,255,0.72)',
     fontSize: 16,
     fontWeight: '600'
   },
-  progressInfo: {
-    marginTop: 14,
-    color: '#dce9ff',
+  heroMinutes: {
+    color: '#ffffff',
+    fontSize: 48,
+    fontWeight: '800',
+    marginTop: 6
+  },
+  heroBadge: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999
+  },
+  heroBadgeText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 13
+  },
+  heroContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  heroDetails: {
+    flex: 1,
+    marginLeft: 24
+  },
+  heroDetailsLabel: {
+    color: 'rgba(255,255,255,0.72)',
+    fontSize: 14,
+    fontWeight: '600'
+  },
+  heroDetailsValue: {
+    color: '#ffffff',
+    fontSize: 28,
+    fontWeight: '700',
+    marginTop: 4
+  },
+  heroDetailsHint: {
+    color: 'rgba(255,255,255,0.75)',
+    marginTop: 8,
     fontSize: 14
   },
   metricsRow: {
     flexDirection: 'row',
     alignItems: 'stretch',
-    marginBottom: 24
+    marginBottom: 16
   },
   metricSpacer: {
     width: 16
   },
   walkButton: {
+    marginTop: 16,
     backgroundColor: '#ffffff',
-    borderRadius: 24,
-    paddingVertical: 18,
+    borderRadius: 20,
+    paddingVertical: 14,
     paddingHorizontal: 20,
-    alignItems: 'center',
-    marginBottom: 24,
-    shadowColor: '#001040',
+    alignItems: 'flex-start',
+    shadowColor: '#1f5fff',
     shadowOpacity: 0.18,
-    shadowOffset: { width: 0, height: 12 },
-    shadowRadius: 24,
-    elevation: 8
+    shadowOffset: { width: 0, height: 10 },
+    shadowRadius: 18,
+    elevation: 6
   },
   walkButtonActive: {
     backgroundColor: '#3ed598'
   },
   walkButtonText: {
-    color: '#0a4bdc',
-    fontSize: 18,
+    color: '#1b63ff',
+    fontSize: 16,
     fontWeight: '700'
   },
+  walkButtonTextActive: {
+    color: '#08463b'
+  },
   walkButtonHint: {
-    color: '#1c5bd6',
-    marginTop: 4,
+    color: '#5a6d9c',
+    marginTop: 6,
     fontSize: 12,
     fontWeight: '500'
   },
+  walkButtonHintActive: {
+    color: '#0f2d23'
+  },
+  progressBar: {
+    marginTop: 12
+  },
   bonusText: {
-    color: '#ffffff',
+    color: '#112d60',
     fontSize: 20,
     fontWeight: '700',
     marginBottom: 6
   },
   bonusHint: {
-    color: '#e6f1ff',
+    color: '#5a6d9c',
     fontSize: 14
   }
 });

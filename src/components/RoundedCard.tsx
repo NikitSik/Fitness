@@ -1,26 +1,45 @@
 import React, { ReactNode } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface Props {
   children: ReactNode;
   background?: string;
+  gradientColors?: [string, string] | [string, string, string];
   style?: ViewStyle;
 }
 
-const RoundedCard: React.FC<Props> = ({ children, background = 'rgba(255,255,255,0.18)', style }) => (
-  <View style={[styles.card, { backgroundColor: background }, style]}>{children}</View>
-);
+const RoundedCard: React.FC<Props> = ({
+  children,
+  background = '#ffffff',
+  gradientColors,
+  style
+}) => {
+  if (gradientColors) {
+    return (
+      <LinearGradient colors={gradientColors} style={[styles.card, style]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+        {children}
+      </LinearGradient>
+    );
+  }
+
+  return (
+    <View style={[styles.card, { backgroundColor: background }, style]}>
+      {children}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: 26,
+    padding: 22,
     marginBottom: 20,
-    shadowColor: '#001040',
-    shadowOpacity: 0.12,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 6
+    shadowColor: '#143e88',
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4
   }
 });
 
