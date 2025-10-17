@@ -1,86 +1,80 @@
 import React from 'react';
-import { Text, StyleSheet, View, ScrollView } from 'react-native';
-import { LineChart } from 'react-native-chart-kit';
-import GradientScreen from '../components/GradientScreen';
+import { View, Text, StyleSheet } from 'react-native';
+import ScreenContainer from '../components/ScreenContainer';
 import RoundedCard from '../components/RoundedCard';
+import SectionHeading from '../components/SectionHeading';
+import WeeklyTrend from '../components/WeeklyTrend';
+import MetricTile from '../components/MetricTile';
 import { useActivity } from '../context/ActivityContext';
-import { Dimensions } from 'react-native';
 
 const StepsScreen: React.FC = () => {
-  const { weeklySteps, dailySteps, dailyMeters, earnedMinutes } = useActivity();
-  const width = Dimensions.get('window').width - 40;
-  const labels = weeklySteps.map((s) => new Date(s.date).toLocaleDateString('ru-RU', { weekday: 'short' }));
-  const data = weeklySteps.map((s) => s.steps);
+  const { daily, weekly } = useActivity();
+  const averageSteps = weekly.reduce((sum, item) => sum + item.steps, 0) / weekly.length;
 
   return (
-    <GradientScreen>
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        <RoundedCard>
-          <Text style={styles.title}>Статистика</Text>
-          <View style={styles.statsRow}>
-            <View>
-              <Text style={styles.statValue}>{dailySteps}</Text>
-              <Text style={styles.statLabel}>шагов</Text>
-            </View>
-            <View>
-              <Text style={styles.statValue}>{Math.round(dailyMeters)}</Text>
-              <Text style={styles.statLabel}>метров</Text>
-            </View>
-            <View>
-              <Text style={styles.statValue}>{Math.round(earnedMinutes)}</Text>
-              <Text style={styles.statLabel}>минут</Text>
-            </View>
-          </View>
-        </RoundedCard>
-        <RoundedCard>
-          <Text style={styles.title}>Шаги за неделю</Text>
-          <LineChart
-            data={{ labels, datasets: [{ data }] }}
-            width={width}
-            height={220}
-            bezier
-            chartConfig={{
-              backgroundGradientFrom: '#0a4bdc',
-              backgroundGradientTo: '#6bc1ff',
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(255,255,255,${opacity})`,
-              labelColor: () => '#fff'
-            }}
-            withDots
-            withInnerLines={false}
-            style={styles.chart}
+    <ScreenContainer>
+      <RoundedCard>
+        <SectionHeading title="Сегодня" subtitle="Статистика активности" />
+        <View style={styles.metricsRow}>
+          <MetricTile label="Шаги" value={daily.steps.toLocaleString('ru-RU')} hint="синхронизировано" />
+          <View style={styles.metricSpacer} />
+          <MetricTile
+            label="Минуты"
+            value={`${Math.round(daily.earnedMinutes)} мин`}
+            hint={daily.multiplier > 1 ? `Множитель x${daily.multiplier}` : 'Базовое начисление'}
           />
-        </RoundedCard>
-      </ScrollView>
-    </GradientScreen>
+        </View>
+        <View style={styles.metricsRow}>
+          <MetricTile
+            label="Дистанция"
+            value={`${daily.meters.toFixed(0)} м`}
+            hint={`Цель ${daily.goalMeters} м`}
+          />
+          <View style={styles.metricSpacer} />
+          <MetricTile label="Статус" value={`${daily.challenge}`} hint={daily.reward} />
+        </View>
+      </RoundedCard>
+
+      <RoundedCard>
+        <SectionHeading title="Неделя" subtitle="Прогресс за последние 7 дней" />
+        <WeeklyTrend data={weekly} />
+        <View style={styles.weekSummaryRow}>
+          <Text style={styles.weekSummaryLabel}>Среднее</Text>
+          <Text style={styles.weekSummaryValue}>{Math.round(averageSteps).toLocaleString('ru-RU')} шагов</Text>
+        </View>
+        <Text style={styles.weekHint}>Цель: {weekly[0]?.target.toLocaleString('ru-RU')} шагов в день</Text>
+      </RoundedCard>
+    </ScreenContainer>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    paddingBottom: 40
-  },
-  title: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 12
-  },
-  statsRow: {
+  metricsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between'
+    marginBottom: 16
   },
-  statValue: {
-    color: '#fff',
-    fontSize: 24,
+  metricSpacer: {
+    width: 16
+  },
+  weekSummaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 24,
+    alignItems: 'center'
+  },
+  weekSummaryLabel: {
+    color: '#d8e6ff',
+    fontSize: 14
+  },
+  weekSummaryValue: {
+    color: '#ffffff',
+    fontSize: 18,
     fontWeight: '700'
   },
-  statLabel: {
-    color: '#e5eeff'
-  },
-  chart: {
-    marginTop: 12,
-    borderRadius: 16
+  weekHint: {
+    color: '#e6f1ff',
+    fontSize: 13,
+    marginTop: 6
   }
 });
 

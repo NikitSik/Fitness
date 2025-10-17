@@ -1,26 +1,31 @@
 import 'react-native-gesture-handler';
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import RootNavigator from './src/navigation/RootNavigator';
-import { ActivityProvider } from './src/context/ActivityContext';
-import { SubscriptionProvider } from './src/context/SubscriptionContext';
-import { SettingsProvider } from './src/context/SettingsContext';
+import AppProviders from './src/providers/AppProviders';
+
+const navigationTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: 'transparent',
+    primary: '#0a4bdc',
+    card: '#0a4bdc',
+    text: '#ffffff'
+  }
+};
 
 export default function App() {
   return (
     <SafeAreaProvider>
-      <SettingsProvider>
-        <SubscriptionProvider>
-          <ActivityProvider>
-            <NavigationContainer>
-              <RootNavigator />
-              <StatusBar style="light" />
-            </NavigationContainer>
-          </ActivityProvider>
-        </SubscriptionProvider>
-      </SettingsProvider>
+      <AppProviders>
+        <NavigationContainer theme={navigationTheme}>
+          <RootNavigator />
+          <StatusBar style="light" />
+        </NavigationContainer>
+      </AppProviders>
     </SafeAreaProvider>
   );
 }

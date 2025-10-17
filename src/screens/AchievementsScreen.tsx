@@ -1,104 +1,101 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
-import GradientScreen from '../components/GradientScreen';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import ScreenContainer from '../components/ScreenContainer';
 import RoundedCard from '../components/RoundedCard';
+import SectionHeading from '../components/SectionHeading';
+import ProgressBar from '../components/ProgressBar';
 import { useActivity } from '../context/ActivityContext';
 
-const badges = [
-  { distance: 1_000, title: 'Первый километр' },
-  { distance: 10_000, title: '10 км путешественник' },
-  { distance: 100_000, title: '100 км герой' },
-  { distance: 500_000, title: 'Полтысячи км' }
-];
+const metersToKilometers = (meters: number) => (meters / 1000).toFixed(1);
 
 const AchievementsScreen: React.FC = () => {
-  const { weeklySteps } = useActivity();
-  const totalDistance = useMemo(() => weeklySteps.reduce((acc, entry) => acc + entry.steps * 0.8, 0), [weeklySteps]);
-  const level = Math.floor(totalDistance / 5000) + 1;
-  const nextLevelDistance = level * 5000;
-  const progressToNextLevel = (totalDistance % 5000) / 5000;
+  const { achievements, streakDays, lifetimeMeters } = useActivity();
+  const levelSize = 5000;
+  const currentLevel = Math.floor(lifetimeMeters / levelSize) + 1;
+  const nextLevelMeters = currentLevel * levelSize;
+  const levelProgress = (lifetimeMeters % levelSize) / levelSize;
 
   return (
-    <GradientScreen>
-      <View style={styles.container}>
-        <RoundedCard>
-          <Text style={styles.levelTitle}>Уровень {level}</Text>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${Math.min(progressToNextLevel, 1) * 100}%` }]} />
+    <ScreenContainer>
+      <RoundedCard>
+        <SectionHeading title="Уровень" subtitle="Повышайте активность" />
+        <Text style={styles.levelValue}>LVL {currentLevel}</Text>
+        <Text style={styles.levelHint}>Всего пройдено {metersToKilometers(lifetimeMeters)} км</Text>
+        <ProgressBar progress={levelProgress} height={14} />
+        <Text style={styles.levelProgress}>Следующий уровень через {(nextLevelMeters - lifetimeMeters).toFixed(0)} м</Text>
+        <View style={styles.streakBadge}>
+          <Text style={styles.streakBadgeText}>Серия {streakDays} дн.</Text>
+        </View>
+      </RoundedCard>
+
+      <SectionHeading title="Бейджи" subtitle="Соберите всю коллекцию" />
+      {achievements.map((achievement) => (
+        <RoundedCard
+          key={achievement.id}
+          background={achievement.completed ? 'rgba(62,213,152,0.35)' : 'rgba(255,255,255,0.18)'}
+        >
+          <View style={styles.badgeHeader}>
+            <Text style={styles.badgeTitle}>{achievement.label}</Text>
+            <Text style={styles.badgeTarget}>{achievement.metersRequired / 1000} км</Text>
           </View>
-          <Text style={styles.levelText}>
-            Осталось {Math.max(0, Math.round(nextLevelDistance - (totalDistance % 5000)))} м до следующего уровня
+          <ProgressBar progress={achievement.progress} height={12} />
+          <Text style={styles.badgeHint}>
+            {achievement.completed
+              ? 'Получено!'
+              : `Осталось ${Math.max(0, (1 - achievement.progress) * achievement.metersRequired).toFixed(0)} м`}
           </Text>
         </RoundedCard>
-        <Text style={styles.sectionTitle}>Бейджи</Text>
-        <FlatList
-          data={badges}
-          keyExtractor={(item) => item.distance.toString()}
-          renderItem={({ item }) => {
-            const unlocked = totalDistance >= item.distance;
-            return (
-              <RoundedCard background={unlocked ? 'rgba(62,213,152,0.35)' : 'rgba(255,255,255,0.18)'}>
-                <Text style={styles.badgeTitle}>{item.title}</Text>
-                <Text style={styles.badgeDescription}>{item.distance / 1000} км</Text>
-                <Text style={[styles.badgeStatus, unlocked ? styles.unlocked : styles.locked]}>
-                  {unlocked ? 'Открыто' : 'Заблокировано'}
-                </Text>
-              </RoundedCard>
-            );
-          }}
-        />
-      </View>
-    </GradientScreen>
+      ))}
+    </ScreenContainer>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1
+  levelValue: {
+    color: '#ffffff',
+    fontSize: 32,
+    fontWeight: '800',
+    marginBottom: 12
   },
-  levelTitle: {
-    color: '#fff',
-    fontSize: 24,
+  levelHint: {
+    color: '#d8e6ff',
+    marginBottom: 16
+  },
+  levelProgress: {
+    color: '#e6f1ff',
+    fontSize: 14,
+    marginTop: 12
+  },
+  streakBadge: {
+    marginTop: 16,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.2)'
+  },
+  streakBadgeText: {
+    color: '#ffffff',
     fontWeight: '700'
   },
-  levelText: {
-    color: '#eaf2ff',
-    marginTop: 8
-  },
-  progressBar: {
-    height: 12,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 999,
-    overflow: 'hidden',
-    marginVertical: 12
-  },
-  progressFill: {
-    backgroundColor: '#fff',
-    height: '100%'
-  },
-  sectionTitle: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '600',
-    marginVertical: 12
+  badgeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12
   },
   badgeTitle: {
-    color: '#fff',
+    color: '#ffffff',
     fontSize: 18,
-    fontWeight: '600'
+    fontWeight: '700'
   },
-  badgeDescription: {
-    color: '#e5eeff'
+  badgeTarget: {
+    color: '#e6f1ff',
+    fontSize: 14
   },
-  badgeStatus: {
-    marginTop: 6,
-    fontWeight: '600'
-  },
-  unlocked: {
-    color: '#3ed598'
-  },
-  locked: {
-    color: '#ffbdbd'
+  badgeHint: {
+    color: '#d8e6ff',
+    fontSize: 13,
+    marginTop: 10
   }
 });
 
