@@ -4,35 +4,24 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsWalk
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Store
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,28 +41,31 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-data class UpgradeLevel(
-    val title: String,
-    val description: String,
-    val cost: String
-)
+// ---------- DATA CLASSES ----------
 
-data class UpgradeCategory(
+data class UpgradeLevel(val title: String, val description: String, val cost: String)
+data class UpgradeCategory(val name: String, val levels: List<UpgradeLevel>)
+private data class Achievement(val title: String, val description: String, val reward: String)
+private data class SubscriptionTier(val name: String, val multiplier: String, val note: String)
+private data class PlayerProfile(
     val name: String,
-    val levels: List<UpgradeLevel>
+    val initials: String,
+    val totalSteps: Int,
+    val progressPercent: Int,
+    val upgradesUnlocked: Int,
+    val achievementsUnlocked: Int,
+    val subscriptionTier: String
 )
+private data class StepVilleState(val stepCoins: Int, val dailyAdViewsLeft: Int)
 
-private data class Achievement(
-    val title: String,
-    val description: String,
-    val reward: String
-)
+private enum class StepVilleTab(val label: String, val icon: ImageVector) {
+    Home("Главная", Icons.Filled.Home),
+    Store("Магазин", Icons.Filled.Store),
+    Achievements("Достижения", Icons.Filled.EmojiEvents),
+    Profile("Профиль", Icons.Filled.Person)
+}
 
-private data class SubscriptionTier(
-    val name: String,
-    val multiplier: String,
-    val note: String
-)
+// ---------- APP STRUCTURE ----------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,42 +73,43 @@ fun StepVilleApp() {
     val categories = remember { buildUpgradeCategories() }
     val achievements = remember { buildAchievements() }
     val subscriptions = remember { buildSubscriptions() }
+    val profile = remember { buildProfile() }
+    val state = remember { StepVilleState(stepCoins = 128_450, dailyAdViewsLeft = 3) }
 
-    Scaffold(topBar = { StepVilleTopBar() }) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.surface,
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
-                        )
-                    )
-                ),
-            contentPadding = PaddingValues(
-                start = 24.dp,
-                end = 24.dp,
-                top = innerPadding.calculateTopPadding() + 24.dp,
-                bottom = innerPadding.calculateBottomPadding() + 24.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            item { HeroSection() }
-            item { StepEconomySection() }
-            item { UpgradeStoreSection(categories) }
-            item { DailyBoostSection() }
-            item { AchievementsSection(achievements) }
-            item { SubscriptionSection(subscriptions) }
-            item { ProfileSection() }
-            item { FooterSection() }
+    var selectedTab by remember { mutableStateOf(StepVilleTab.Home) }
+
+    Scaffold(
+        topBar = { StepVilleTopBar(state.stepCoins) },
+        bottomBar = { StepVilleBottomBar(selectedTab, onTabSelected = { selectedTab = it }) }
+    ) { innerPadding ->
+        when (selectedTab) {
+            StepVilleTab.Home -> StepVilleLazyColumn(innerPadding) {
+                item { HeroSection() }
+                item { StepEconomySection() }
+                item { DailyBoostInfoSection() }
+                item { SubscriptionSection(subscriptions) }
+                item { FooterSection() }
+            }
+            StepVilleTab.Store -> StepVilleLazyColumn(innerPadding) {
+                item { DailyBoostBanner(state.dailyAdViewsLeft) }
+                item { UpgradeStoreSection(categories) }
+            }
+            StepVilleTab.Achievements -> StepVilleLazyColumn(innerPadding) {
+                item { AchievementsSection(achievements) }
+                item { FooterSection() }
+            }
+            StepVilleTab.Profile -> StepVilleLazyColumn(innerPadding) {
+                item { ProfileSection(profile) }
+                item { FooterSection() }
+            }
         }
     }
 }
 
+// ---------- UI COMPONENTS ----------
+
 @Composable
-private fun StepVilleTopBar() {
+private fun StepVilleTopBar(stepCoins: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -124,84 +117,105 @@ private fun StepVilleTopBar() {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = "StepVille", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        IconButton(onClick = { }) {
-            Icon(
-                imageVector = Icons.Filled.DirectionsWalk,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
+        Text("StepVille", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        StepCounter(stepCoins)
+    }
+}
+
+@Composable
+private fun StepCounter(stepCoins: Int) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(Icons.Filled.DirectionsWalk, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text("StepCoins", style = MaterialTheme.typography.labelSmall)
+                Text("$stepCoins монет", fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun StepVilleBottomBar(selectedTab: StepVilleTab, onTabSelected: (StepVilleTab) -> Unit) {
+    NavigationBar {
+        StepVilleTab.values().forEach { tab ->
+            NavigationBarItem(
+                selected = tab == selectedTab,
+                onClick = { onTabSelected(tab) },
+                icon = {
+                    Icon(
+                        tab.icon,
+                        contentDescription = tab.label,
+                        tint = if (tab == selectedTab)
+                            MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                label = { Text(tab.label) },
+                alwaysShowLabel = false
             )
         }
     }
 }
 
 @Composable
+private fun StepVilleLazyColumn(innerPadding: PaddingValues, content: LazyListScope.() -> Unit) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.surface,
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)
+                    )
+                )
+            ),
+        contentPadding = PaddingValues(
+            start = 24.dp,
+            end = 24.dp,
+            top = innerPadding.calculateTopPadding() + 24.dp,
+            bottom = innerPadding.calculateBottomPadding() + 24.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+        content = content
+    )
+}
+
+// ---------- SECTIONS ----------
+
+@Composable
 private fun HeroSection() {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
         Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(
-                text = "StepVille",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-            Text(
-                text = "Твои шаги — твой прогресс. Развивай виртуальный участок, преобразуя реальную активность в уютный элитный мир.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-            Text(
-                text = "• Каждый шаг = 1 StepCoin\n• Улучшай дом, машину, питомца и гардероб\n• Наблюдай, как пустой участок превращается в элитный комплекс",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+            Text("StepVille", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+            Text("Твои шаги — твой прогресс. Развивай участок, улучшай дом, питомца и гардероб.")
+            Text("• 1 шаг = 1 StepCoin\n• Улучшай и наблюдай прогресс\n• Развивай свой элитный мир.")
         }
     }
 }
 
 @Composable
 private fun StepEconomySection() {
-    SectionCard(title = "Игровая экономика") {
-        Text(
-            text = "StepVille строится на честном обмене движения на прогресс. Чем больше ходишь, тем более роскошным становится виртуальный мир.",
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = "• Дом: 50 000 / 100 000 / 200 000 шагов\n• Машина: 25 000 / 50 000 / 100 000 шагов\n• Питомец: 10 000 / 30 000 / 80 000 шагов\n• Гардероб: 5 000 / 15 000 / 30 000 шагов",
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = "Путь к современному коттеджу, премиум-авто и ухоженному питомцу занимает недели активной ходьбы, создавая долгосрочную мотивацию.",
-            style = MaterialTheme.typography.bodyMedium
-        )
+    SectionCard("Экономика шагов") {
+        Text("• 1 шаг = 1 StepCoin\n• Реклама даёт временные бонусы\n• Трать монеты на улучшения.")
     }
 }
 
 @Composable
 private fun UpgradeStoreSection(categories: List<UpgradeCategory>) {
-    SectionCard(title = "Магазин улучшений") {
-        Text(
-            text = "Четыре раздела магазина показывают визуальный прогресс. Каждое улучшение — новая сцена на участке героя.",
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Spacer(modifier = Modifier.height(16.dp))
+    SectionCard("Магазин улучшений") {
         categories.forEach { category ->
-            Text(
-                text = category.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            category.levels.forEach { level ->
-                UpgradeLevelRow(level = level)
-            }
-            Spacer(modifier = Modifier.height(12.dp))
+            Text(category.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            category.levels.forEach { level -> UpgradeLevelRow(level) }
         }
     }
 }
@@ -209,56 +223,59 @@ private fun UpgradeStoreSection(categories: List<UpgradeCategory>) {
 @Composable
 private fun UpgradeLevelRow(level: UpgradeLevel) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(text = level.title, fontWeight = FontWeight.SemiBold)
-                Text(text = level.description, style = MaterialTheme.typography.bodySmall)
+                Text(level.title, fontWeight = FontWeight.SemiBold)
+                Text(level.description, style = MaterialTheme.typography.bodySmall)
             }
-            Text(text = level.cost, fontWeight = FontWeight.Medium)
+            Text(level.cost, fontWeight = FontWeight.Medium)
         }
     }
 }
 
 @Composable
-private fun DailyBoostSection() {
-    SectionCard(title = "Ежедневный бонус") {
-        Text(
-            text = "Кнопка \"Смотреть рекламу +50 шагов (3/3)\" доступна три раза в день. Она даёт небольшой импульс, но не заменяет реальные прогулки.",
-            style = MaterialTheme.typography.bodyMedium
-        )
+private fun DailyBoostBanner(remainingUses: Int) {
+    SectionCard("Ежедневный бонус") {
+        Text("Используй рекламу, чтобы ускорить покупки, но помни: главное — реальные шаги!")
+        Spacer(modifier = Modifier.height(12.dp))
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)) {
+            Text(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                text = "Смотреть рекламу +50 шагов ($remainingUses/3)",
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+private fun DailyBoostInfoSection() {
+    SectionCard("Баланс бонусов") {
+        Text("Рекламу можно смотреть до 3 раз в день — это честная игровая механика.")
     }
 }
 
 @Composable
 private fun AchievementsSection(achievements: List<Achievement>) {
-    SectionCard(title = "Достижения") {
-        Text(
-            text = "Цели поддерживают регулярный прогресс и радуют игрока бонусами.",
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        achievements.forEach { achievement ->
+    SectionCard("Достижения") {
+        achievements.forEach {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
             ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(text = achievement.title, fontWeight = FontWeight.SemiBold)
-                    Text(text = achievement.description, style = MaterialTheme.typography.bodySmall)
-                    Text(text = "Награда: ${achievement.reward}", style = MaterialTheme.typography.labelMedium)
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(it.title, fontWeight = FontWeight.SemiBold)
+                    Text(it.description)
+                    Text("Награда: ${it.reward}", style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
@@ -267,23 +284,18 @@ private fun AchievementsSection(achievements: List<Achievement>) {
 
 @Composable
 private fun SubscriptionSection(subscriptions: List<SubscriptionTier>) {
-    SectionCard(title = "Подписка") {
-        Text(
-            text = "Базовая игра бесплатна, но подписка ускоряет накопление шагов.",
-            style = MaterialTheme.typography.bodyMedium
-        )
+    SectionCard("Подписка") {
+        Text("Базовая игра бесплатна, но подписка ускоряет прогресс.")
         Spacer(modifier = Modifier.height(12.dp))
         subscriptions.forEach { tier ->
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
             ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(text = tier.name, fontWeight = FontWeight.Bold)
-                    Text(text = "Множитель: ${tier.multiplier}")
-                    Text(text = tier.note, style = MaterialTheme.typography.bodySmall)
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(tier.name, fontWeight = FontWeight.Bold)
+                    Text("Множитель: ${tier.multiplier}")
+                    Text(tier.note, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -291,73 +303,80 @@ private fun SubscriptionSection(subscriptions: List<SubscriptionTier>) {
 }
 
 @Composable
-private fun ProfileSection() {
-    SectionCard(title = "Профиль игрока") {
-        Text(
-            text = "На экране профиля отображаются аватар, суммарные шаги, прогресс развития и краткая статистика.",
-            style = MaterialTheme.typography.bodyMedium
-        )
+private fun ProfileSection(profile: PlayerProfile) {
+    SectionCard("Профиль игрока") {
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier.size(64.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(profile.initials, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            }
+            Column {
+                Text(profile.name, fontWeight = FontWeight.SemiBold)
+                Text("Всего шагов: ${profile.totalSteps}")
+                Text("Подписка: ${profile.subscriptionTier}")
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            ProfileStat("Прогресс", "${profile.progressPercent}%")
+            ProfileStat("Улучшений", profile.upgradesUnlocked.toString())
+            ProfileStat("Достижений", profile.achievementsUnlocked.toString())
+        }
+    }
+}
+
+@Composable
+private fun ProfileStat(title: String, value: String) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(title, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center)
+            Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        }
     }
 }
 
 @Composable
 private fun FooterSection() {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.Transparent),
+        modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "StepVille объединяет фитнес и симулятор прогрессии, превращая ежедневные прогулки в красивую привычку.",
-            style = MaterialTheme.typography.bodySmall,
-            textAlign = TextAlign.Center
+            "StepVille объединяет фитнес и симулятор прогрессии — каждый шаг делает тебя ближе к цели.",
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodySmall
         )
     }
 }
+
+// ---------- HELPERS ----------
 
 @Composable
 private fun SectionCard(title: String, content: @Composable ColumnScope.() -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(text = title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             content()
         }
     }
 }
 
+// ---------- BUILDERS ----------
+
 private fun buildUpgradeCategories(): List<UpgradeCategory> = listOf(
     UpgradeCategory(
-        name = "Дома",
-        levels = listOf(
-            UpgradeLevel("Старый сарай", "Первый шаг в развитии участка", "50 000 шагов"),
-            UpgradeLevel("Уютный дом", "Комфортное жильё с ухоженным садом", "100 000 шагов"),
-            UpgradeLevel("Современный коттедж", "Финальная цель для роскошной жизни", "200 000 шагов")
-        )
-    ),
-    UpgradeCategory(
-        name = "Машины",
-        levels = listOf(
-            UpgradeLevel("Разбитая машина", "Первые шаги к личному транспорту", "25 000 шагов"),
-            UpgradeLevel("Надёжный автомобиль", "Комфортное передвижение", "50 000 шагов"),
-            UpgradeLevel("Премиальная модель", "Символ статуса и скорости", "100 000 шагов")
-        )
-    ),
-    UpgradeCategory(
-        name = "Питомцы",
-        levels = listOf(
-            UpgradeLevel("Щенок", "Новый друг на участке", "10 000 шагов"),
-            UpgradeLevel("Преданный компаньон", "Заботливый питомец", "30 000 шагов"),
-            UpgradeLevel("Ухоженный любимец", "Послушный и счастливый друг", "80 000 шагов")
-        )
-    ),
-    UpgradeCategory(
-        name = "Гардероб",
-        levels = listOf(
+        "Гардероб",
+        listOf(
             UpgradeLevel("Повседневный образ", "Простая одежда для начала", "5 000 шагов"),
             UpgradeLevel("Стильный наряд", "Больше уверенности и яркости", "15 000 шагов"),
             UpgradeLevel("Премиальный стиль", "Дорогие материалы и дизайн", "30 000 шагов")
@@ -368,14 +387,23 @@ private fun buildUpgradeCategories(): List<UpgradeCategory> = listOf(
 private fun buildAchievements(): List<Achievement> = listOf(
     Achievement("Первая неделя", "Пройти 70 000 шагов за 7 дней", "+500 StepCoins"),
     Achievement("Марафон развития", "Совершить 10 улучшений", "Уникальная анимация"),
-    Achievement("Верный друг", "Пройти 200 000 шагов вместе с питомцем", "Эксклюзивный аксессуар"),
-    Achievement("Король стиля", "Собрать полный премиум-гардероб", "Дополнительные 1 000 StepCoins")
+    Achievement("Король стиля", "Собрать полный премиум-гардероб", "+1 000 StepCoins")
 )
 
 private fun buildSubscriptions(): List<SubscriptionTier> = listOf(
-    SubscriptionTier("Silver", "×1.25", "Комфортный темп прогресса для активных игроков"),
-    SubscriptionTier("Gold", "×1.5", "Быстрый рост шагов и регулярные бонусы"),
-    SubscriptionTier("Platinum", "×2", "Максимальное ускорение без ограничений по активностям")
+    SubscriptionTier("Silver", "×1.25", "Комфортный темп прогресса"),
+    SubscriptionTier("Gold", "×1.5", "Быстрый рост шагов и бонусы"),
+    SubscriptionTier("Platinum", "×2", "Максимальное ускорение без ограничений")
+)
+
+private fun buildProfile(): PlayerProfile = PlayerProfile(
+    name = "Александр",
+    initials = "AS",
+    totalSteps = 982_340,
+    progressPercent = 68,
+    upgradesUnlocked = 9,
+    achievementsUnlocked = 12,
+    subscriptionTier = "Gold"
 )
 
 @Preview(showBackground = true)
