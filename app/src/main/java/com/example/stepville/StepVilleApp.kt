@@ -38,15 +38,14 @@ enum class StepVilleTab(val title: String, val icon: androidx.compose.ui.graphic
 }
 
 @Composable
-fun StepVilleApp(telemetry: StepTelemetry) {
+fun StepVilleApp(telemetry: StepVilleState) {
     var selectedTab by rememberSaveable { mutableStateOf(StepVilleTab.HOME) }
-    val baseState = remember { defaultStepVilleState() }
-    val uiState: StepVilleState = baseState.copy(telemetry = telemetry)
+
 
     StepVilleTheme {
         Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
             Scaffold(
-                topBar = { StepCounterTopBar(telemetry = uiState.telemetry) },
+                topBar = { StepCounterTopBar(telemetry = state.telemetry) },
                 bottomBar = {
                     StepVilleBottomNavigation(
                         selectedTab = selectedTab,
@@ -56,7 +55,7 @@ fun StepVilleApp(telemetry: StepTelemetry) {
             ) { innerPadding ->
                 StepVilleScreenHost(
                     selectedTab = selectedTab,
-                    state = uiState,
+                    state = state,
                     contentPadding = innerPadding
                 )
             }
@@ -78,8 +77,15 @@ private fun StepVilleScreenHost(
         StepVilleTab.PROFILE -> ProfileScreen(profile = state.profile, telemetry = state.telemetry, modifier = modifier)
     }
 }
+@Composable
 
 @Preview(showBackground = true)
 private fun StepVilleAppPreview() {
-    StepVilleApp(telemetry = StepTelemetry(steps = 1200, coins = 1200))
+    val baseState = defaultStepVilleState()
+    StepVilleApp(
+        state = baseState.copy(
+            telemetry = baseState.telemetry.copy(
+                sessionSteps = 1_200,
+                meters = 1_200,
+                coins = 1_200))
 }

@@ -10,18 +10,22 @@ import com.example.stepville.data.models.StepTelemetry
 import com.example.stepville.StepVilleApp
 import com.example.stepville.ui.theme.StepVilleTheme
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.stepville.data.models.state.StepVilleStateHolder
+
 
 class MainActivity : ComponentActivity() {
     private lateinit var stepCounterManager: StepCounterManager
+    private lateinit var stateHolder: StepVilleStateHolder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         stepCounterManager = StepCounterManager(this)
+        stateHolder = StepVilleStateHolder(stepCounterManager)
 
         setContent {
-            val telemetry: StepTelemetry by stepCounterManager.telemetry.collectAsStateWithLifecycle()
-            StepVilleTheme {
-                StepVilleApp(telemetry = telemetry)
+            val uiState by stateHolder.state.collectAsStateWithLifecycle()
+
+            StepVilleApp(state = uiState)
             }
         }
     }
@@ -34,5 +38,10 @@ class MainActivity : ComponentActivity() {
     override fun onPause() {
         super.onPause()
         stepCounterManager.stop()
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        stateHolder.clear()
+        stepCounterManager.clear()
     }
 }

@@ -1,69 +1,134 @@
 package com.example.stepville.core
 
 import android.content.Context
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.preferencesDataStore
 import com.example.stepville.data.models.StepTelemetry
 import com.example.stepville.utils.PreferencesKeys
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+
+private val Context.stepMetricsDataStore: DataStore<Preferences> by preferencesDataStore(
+    name = PreferencesKeys.STEP_METRICS_DATASTORE
+)
 
 class StepCounterManager(
-    context: Context,
-    private val coinsCalculator: StepCoinsCalculator = StepCoinsCalculator
-) : SensorEventListener {
+    private val context: Context,
+    private val sensorSource: StepSensorSource = StepSensorSource(context),
+    private val coinsCalculator: StepCoinsCalculator = StepCoinsCalculator,
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+) {
 
-    private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private val stepSensor: Sensor? = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
     private val preferences = context.getSharedPreferences(PreferencesKeys.STEP_COUNTER_PREFS, Context.MODE_PRIVATE)
+    private val dataStore = context.stepMetricsDataStore
 
     private val _telemetry = MutableStateFlow(
-        StepTelemetry(hasSensor = stepSensor != null)
+        StepTelemetry(hasSensor = sensorSource.hasSensor)
     )
     val telemetry: StateFlow<StepTelemetry> = _telemetry.asStateFlow()
 
-    private var baseline: Float?
-        get() = if (preferences.contains(PreferencesKeys.STEP_BASELINE)) {
-            preferences.getFloat(PreferencesKeys.STEP_BASELINE, 0f)
-        } else {
-            null
-        }
-        set(value) {
-            preferences.edit().apply {
-                if (value == null) remove(PreferencesKeys.STEP_BASELINE) else putFloat(PreferencesKeys.STEP_BASELINE, value)
-            }.apply()
+    private var baselineTotalSteps: Float? = preferences.takeIf { it.contains(PreferencesKeys.BASELINE_TOTAL_STEPS) }
+        ?.getFloat(PreferencesKeys.BASELINE_TOTAL_STEPS, 0f)
+    private var lastTotalSteps: Float = baselineTotalSteps ?: 0f
+    private var sessionSteps: Long = 0L
+    private var meters: Long = 0L
+    private var coins: Long = 0L
+
+    init {
+        scope.launch {
+            val stored = dataStore.data.first()
+            meters = stored[PreferencesKeys.METERS_TOTAL] ?: 0L
+            coins = stored[PreferencesKeys.COINS_TOTAL] ?: 0L
+            emitTelemetry()
         }
 
-    fun start() {
-        stepSensor?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
-        } ?: run {
-            _telemetry.value = StepTelemetry(hasSensor = false)
+        scope.launch {
+            sensorSource.rawTotalSteps.collect { totalSteps ->
+                totalSteps?.let { handleRawSteps(it) }
+            }
         }
+    }
+
+    fun start() {
+        if (!sensorSource.hasSensor) {
+            emitTelemetry(hasSensorOverride = false)
+            return
+        }
+        sensorSource.start()
+        emitTelemetry()
     }
 
     fun stop() {
-        sensorManager.unregisterListener(this)
+        sensorSource.stop()
     }
 
-    override fun onSensorChanged(event: SensorEvent) {
-        val currentValue = event.values.firstOrNull() ?: return
-        val base = baseline
-        val stepsDelta = if (base == null || currentValue < base) {
-            baseline = currentValue
-            0f
-        } else {
-            currentValue - base
+    fun clear() {
+        scope.cancel()
+    }
+
+    private fun handleRawSteps(totalSteps: Float) {
+        lastTotalSteps = totalSteps
+        val baseline = baselineTotalSteps
+        if (baseline == null) {
+            persistBaseline(totalSteps)
+            sessionSteps = 0L
+            emitTelemetry()
+            return
         }
-        val steps = stepsDelta.toLong()
-        val coins = coinsCalculator.stepsToCoins(steps)
-        _telemetry.value = StepTelemetry(steps = steps, coins = coins, hasSensor = true)
+
+        if (totalSteps < baseline) {
+            persistBaseline(totalSteps)
+            sessionSteps = 0L
+            emitTelemetry()
+            return
+        }
+
+        val absoluteSteps = (totalSteps - baseline).toLong()
+        val newSteps = (absoluteSteps - sessionSteps).coerceAtLeast(0L)
+        if (newSteps == 0L) {
+            emitTelemetry()
+            return
+        }
+
+        sessionSteps = absoluteSteps
+        meters += newSteps
+        coins += coinsCalculator.stepsToCoins(newSteps)
+
+        persistMetrics()
+        emitTelemetry()
     }
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+    private fun persistBaseline(value: Float) {
+        baselineTotalSteps = value
+        preferences.edit().putFloat(PreferencesKeys.BASELINE_TOTAL_STEPS, value).apply()
+    }
+
+    private fun persistMetrics() {
+        scope.launch {
+            dataStore.edit { prefs ->
+                prefs[PreferencesKeys.METERS_TOTAL] = meters
+                prefs[PreferencesKeys.COINS_TOTAL] = coins
+            }
+        }
+    }
+
+    private fun emitTelemetry(hasSensorOverride: Boolean? = null) {
+        val hasSensorValue = hasSensorOverride ?: sensorSource.hasSensor
+        _telemetry.value = StepTelemetry(
+            lastTotalSteps = lastTotalSteps,
+            sessionSteps = sessionSteps,
+            meters = meters,
+            coins = coins,
+            hasSensor = hasSensorValue
+        )
+    }
 }
-
-
