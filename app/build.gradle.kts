@@ -48,6 +48,11 @@ android {
 }
 
 dependencies {
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.runtime:runtime")
+    implementation("androidx.compose.runtime:runtime-saveable")
     implementation(platform("androidx.compose:compose-bom:2024.06.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
@@ -64,6 +69,8 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
 }
 
 kotlin {

@@ -9,6 +9,7 @@ import com.example.stepville.core.StepCounterManager
 import com.example.stepville.data.models.StepTelemetry
 import com.example.stepville.StepVilleApp
 import com.example.stepville.ui.theme.StepVilleTheme
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 class MainActivity : ComponentActivity() {
     private lateinit var stepCounterManager: StepCounterManager
@@ -18,7 +19,7 @@ class MainActivity : ComponentActivity() {
         stepCounterManager = StepCounterManager(this)
 
         setContent {
-            val telemetry: StepTelemetry by stepCounterManager.telemetry.collectAsState()
+            val telemetry: StepTelemetry by stepCounterManager.telemetry.collectAsStateWithLifecycle()
             StepVilleTheme {
                 StepVilleApp(telemetry = telemetry)
             }
