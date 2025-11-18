@@ -28,7 +28,7 @@ fun StepCounterTopBar(telemetry: StepTelemetry, modifier: Modifier = Modifier) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                imageVector = Icons.Default.DirectionsWalk,
+                imageVector = Icons.Filled.DirectionsWalk,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary
             )

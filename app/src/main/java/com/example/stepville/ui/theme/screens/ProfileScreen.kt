@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.stepville.data.models.PlayerProfile
 import com.example.stepville.data.models.StepTelemetry
-import com.example.stepville.ui.components.SectionCard
+import com.example.stepville.ui.theme.SectionCard
 
 @Composable
 fun ProfileScreen(profile: PlayerProfile, telemetry: StepTelemetry, modifier: Modifier = Modifier) {

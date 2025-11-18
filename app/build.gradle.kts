@@ -71,6 +71,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    implementation("androidx.compose.foundation:foundation-layout")
 }
 
 kotlin {

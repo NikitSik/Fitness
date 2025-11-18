@@ -19,9 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.stepville.data.models.StepTelemetry
-import com.example.stepville.data.state.StepVilleState
-import com.example.stepville.ui.components.SectionCard
-import com.example.stepville.ui.components.SubscriptionCard
+import com.example.stepville.data.models.state.StepVilleState
+import com.example.stepville.ui.theme.SectionCard
+import com.example.stepville.ui.theme.SubscriptionCard
 
 @Composable
 fun HomeScreen(state: StepVilleState, modifier: Modifier = Modifier) {

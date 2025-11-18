@@ -12,8 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.stepville.data.models.UpgradeCategory
-import com.example.stepville.ui.components.SectionCard
-import com.example.stepville.ui.components.UpgradeCard
+import com.example.stepville.ui.theme.SectionCard
+import com.example.stepville.ui.theme.UpgradeCard
 
 @Composable
 fun StoreScreen(categories: List<UpgradeCategory>, modifier: Modifier = Modifier) {
