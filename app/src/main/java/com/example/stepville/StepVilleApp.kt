@@ -78,7 +78,12 @@ private fun StepVilleScreenHost(
     }
 }
 @Composable
+fun StepVilleApp() {
+    StepVilleApp(defaultStepVilleState())
+}
 
+@Preview(showBackground = true)
+@Composable
 @Preview(showBackground = true)
 private fun StepVilleAppPreview() {
     val baseState = defaultStepVilleState()

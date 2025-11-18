@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val uiState by stateHolder.state.collectAsStateWithLifecycle()
 
-            StepVilleApp(state = uiState)
+            StepVilleApp(uiState)
             }
         }
     }

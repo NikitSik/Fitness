@@ -18,8 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.example.stepville.data.models.StepTelemetry
 
 @Composable
-fun StepCounterTopBar(telemetry: StepTelemetry, modifier: Modifier = Modifier) {
-    Row(
+fun StepCounterTopBar(telemetry: StepTelemetry = StepTelemetry(), modifier: Modifier = Modifier) {    Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 16.dp),
