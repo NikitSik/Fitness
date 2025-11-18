@@ -7,7 +7,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.example.stepville.core.StepCounterManager
 import com.example.stepville.data.models.StepTelemetry
-import com.example.stepville.ui.StepVilleApp
+import com.example.stepville.StepVilleApp
 import com.example.stepville.ui.theme.StepVilleTheme
 
 class MainActivity : ComponentActivity() {

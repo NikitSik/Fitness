@@ -20,14 +20,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.stepville.data.models.StepTelemetry
-import com.example.stepville.data.state.StepVilleState
-import com.example.stepville.data.state.defaultStepVilleState
-import com.example.stepville.ui.components.StepCounterTopBar
-import com.example.stepville.ui.components.StepVilleBottomNavigation
-import com.example.stepville.ui.screens.AchievementsScreen
-import com.example.stepville.ui.screens.HomeScreen
-import com.example.stepville.ui.screens.ProfileScreen
-import com.example.stepville.ui.screens.StoreScreen
+import com.example.stepville.data.models.state.StepVilleState
+import com.example.stepville.data.models.state.defaultStepVilleState
+import com.example.stepville.ui.theme.StepCounterTopBar
+import com.example.stepville.ui.theme.StepVilleBottomNavigation
+import com.example.stepville.ui.theme.screens.AchievementsScreen
+import com.example.stepville.ui.theme.screens.HomeScreen
+import com.example.stepville.ui.theme.screens.ProfileScreen
+import com.example.stepville.ui.theme.screens.StoreScreen
 import com.example.stepville.ui.theme.StepVilleTheme
 
 enum class StepVilleTab(val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
